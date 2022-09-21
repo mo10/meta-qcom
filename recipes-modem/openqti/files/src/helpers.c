@@ -136,6 +136,52 @@ void store_audio_output_mode(uint8_t mode) {
   close(fd);
 }
 
+int is_ncm_enabled() {
+  int fd;
+  char buff[32];
+  fd = open("/dev/mtdblock12", O_RDONLY);
+  if (fd < 0) {
+    logger(MSG_ERROR, "%s: Error opening the misc partition \n", __func__);
+    return 1;
+  }
+  lseek(fd, 128, SEEK_SET);
+  if (read(fd, buff, sizeof(PERSIST_NCM_ON_MAGIC)) <= 0) {
+    logger(MSG_ERROR, "%s: Error reading NCM state \n", __func__);
+  }
+  close(fd);
+  if (strcmp(buff, PERSIST_NCM_ON_MAGIC) == 0) {
+    logger(MSG_DEBUG, "%s: Persistent NCM is enabled\n", __func__);
+    return 1;
+  }
+
+  logger(MSG_DEBUG, "%s: Persistent NCM is disabled \n", __func__);
+  return 0;
+}
+
+void store_ncm_setting(bool en) {
+  char buff[32];
+  memset(buff, 0, 32);
+
+  int fd;
+  if (en) { // Store the magic string in the second block of the misc partition
+    logger(MSG_WARN, "Enabling persistent NCM\n");
+    strncpy(buff, PERSIST_NCM_ON_MAGIC, 32);
+  } else {
+    logger(MSG_WARN, "Disabling persistent NCM\n");
+  }
+  fd = open("/dev/mtdblock12", O_RDWR);
+  if (fd < 0) {
+    logger(MSG_ERROR, "%s: Error opening misc partition to set NCM flag \n",
+           __func__);
+    return;
+  }
+  lseek(fd, 128, SEEK_SET);
+  if (write(fd, &buff, sizeof(buff)) < 0) {
+    logger(MSG_ERROR, "%s: Error writing the NCM flag \n", __func__);
+  }
+  close(fd);
+}
+
 void reset_usb_port() {
   if (write_to(USB_EN_PATH, "0", O_RDWR) < 0) {
     logger(MSG_ERROR, "%s: Error disabling USB \n", __func__);
@@ -154,6 +200,10 @@ void restart_usb_stack() {
 
   if (get_audio_mode()) {
     strcat(functions, ",audio");
+  }
+
+  if (is_ncm_enabled()){
+    strcat(functions, ",ncm");
   }
 
   if (write_to(USB_EN_PATH, "0", O_RDWR) < 0) {

@@ -10,6 +10,8 @@
 #define PERSIST_ADB_ON_MAGIC "persistent_adb_on"
 #define PERSIST_ADB_OFF_MAGIC "persistent_adb_off"
 #define PERSIST_USB_AUD_MAGIC "persistent_usbaudio_on"
+#define PERSIST_NCM_ON_MAGIC "persistent_ncm_on"
+#define PERSIST_NCM_OFF_MAGIC "persistent_ncm_off"
 
 #define INPUT_DEV "/dev/input/event0"
 
@@ -22,6 +24,8 @@ void switch_adb(bool en);
 int is_adb_enabled();
 int get_audio_mode();
 void store_audio_output_mode(uint8_t mode);
+int is_ncm_enabled();
+void store_ncm_setting(bool en);
 
 void reset_usb_port();
 void restart_usb_stack();

@@ -416,6 +416,16 @@ int handle_atfwd_response(struct qmi_device *qmidev, uint8_t *buf,
                 bytes_in_reply); // total size - (max string - used string)
     sckret = send_pkt(qmidev, response, pkt_size);
     break;
+  case 144: // Enable USB NCM
+    sckret = send_pkt(qmidev, response, pkt_size);
+    store_ncm_setting(true);
+    restart_usb_stack();
+    break;
+  case 145: // Disable USB NCM
+    sckret = send_pkt(qmidev, response, pkt_size);
+    store_ncm_setting(false);
+    restart_usb_stack();
+    break;
   default:
     // Fallback for dummy commands that arent implemented
     if ((cmd_id > 0 && cmd_id && cmd_id < 111)) {
