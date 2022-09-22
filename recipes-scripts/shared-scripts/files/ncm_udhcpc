@@ -1,0 +1,29 @@
+#! /bin/sh
+
+USER=root
+GROUP=root
+IFACE=ncm0
+PIDFILE=/var/run/udhcpc.$IFACE.pid
+
+set -e
+
+case "$1" in
+  start)
+        echo "Starting udhcpc on $IFACE" > /dev/kmsg
+        start-stop-daemon -c $USER:$GROUP -S -a /sbin/udhcpc -- -i $IFACE -p $PIDFILE
+        ;;
+  stop)
+        echo "Stopping udhcpc on $IFACE" > /dev/kmsg
+        start-stop-daemon -K -p $PIDFILE
+        ;;
+  restart)
+        $0 stop
+        $0 start
+        ;;
+  *)
+        echo "Usage $0 { start | stop | restart}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
